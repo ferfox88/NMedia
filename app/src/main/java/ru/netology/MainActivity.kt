@@ -3,8 +3,10 @@ package ru.netology
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import ru.netology.adapter.AdapterCallback
+import ru.netology.adapter.PostsAdapter
 import ru.netology.databinding.ActivityMainBinding
-import ru.netology.dto.translatingCount
+import ru.netology.dto.Post
 import ru.netology.viewmodel.PostViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -14,25 +16,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val viewModel: PostViewModel by viewModels()
-        viewModel.data.observe(this) { post ->
-            with(binding) {
-                author.text = post.author
-                published.text = post.published
-                content.text = post.content
-                countLike.text = translatingCount(post.countLike)
-                countShare.text = translatingCount(post.countShare)
-                like.setImageResource(
-                    if (post.likedByMe) R.drawable.liked else R.drawable.ic_baseline_favorite_border_24
-                )
+        val adapter = PostsAdapter(object: AdapterCallback{
+            override fun liked(post: Post) {
+                viewModel.likeById(post.id)
             }
-        }
 
-        binding.like.setOnClickListener {
-            viewModel.like()
-        }
+            override fun shared(post: Post) {
+                viewModel.shareById(post.id)
+            }
+        })
 
-        binding.share.setOnClickListener {
-            viewModel.share()
+        binding.list.adapter = adapter
+        viewModel.data.observe(this) { posts ->
+            adapter.submitList(posts)
         }
     }
 }
